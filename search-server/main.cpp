@@ -63,10 +63,11 @@ public:
     void AddDocument(int document_id, const string& document) {
         ++document_count_;
         const vector<string> words = SplitIntoWordsNoStop(document);
-        const double tf = CalcTF(words);
+        //изменил обозначение переменной tf на inc_tf
+        const double inc_tf = CalcOneWordTF(words);
         for (const string& word: words) {
             if (!IsStopWord(word)) {
-                word_to_document_freqs_[word][document_id] += tf;
+                word_to_document_freqs_[word][document_id] += inc_tf;
             }
         }
     }
@@ -83,7 +84,7 @@ public:
         }
         return matched_documents;
     }
-
+    
 private:
     map<string, map<int, double>> word_to_document_freqs_;
     set<string> stop_words_;
@@ -119,15 +120,19 @@ private:
     vector<Document> FindAllDocuments(const Query& query_words) const {
         map<int, double> document_to_relevance; 
         vector<Document> matched_documents;
+        /*в отдельном методе ComputeMapIDFs() вычисляются и сохраняются в словарь
+        идф для каждого +слова*/
+        map<string, double> word_to_idfs = ComputeMapIDFs(query_words.plus_words);
         for (const string& word : query_words.plus_words) {
             if (word_to_document_freqs_.count(word) == 0) {
                 continue;
             }
-            const double idf = CalcIDF(word);
+            //идф вызывается из словаря по ключу +слову
             for (const auto& [document_id, tf] : word_to_document_freqs_.at(word)){
-                document_to_relevance[document_id] += tf * idf;
+                document_to_relevance[document_id] += tf * word_to_idfs[word];
             }
         }
+        
         for (const string& word : query_words.minus_words) {
             if (word_to_document_freqs_.count(word) == 0) {
                 continue;
@@ -136,17 +141,31 @@ private:
                 document_to_relevance.erase(document_id);
             }
         }
+        
         for (const auto& [document_id, relevance] : document_to_relevance) {
             matched_documents.push_back({document_id, relevance});
         }
         return matched_documents;
     }
     
-    double CalcIDF(const string& word) const {
+    double CalcIdf(const string& word) const {
         return log(static_cast<double>(document_count_) / word_to_document_freqs_.at(word).size());
     }
     
-    double CalcTF (const vector<string>& words) const {
+    //добавил метод возвращающий словарь +слово-идф
+    map<string, double> ComputeMapIDFs(const set<string>& plus_words) const {
+        map<string, double> word_to_idfs;
+        for (const string& word : plus_words) {
+            if (word_to_document_freqs_.count(word) == 0) {
+                continue;
+            }
+            word_to_idfs.insert({word,CalcIdf(word)});
+        }
+        return word_to_idfs;
+    }
+    
+    //изменил обозначение метода CalcTF на CalcOneWordTF
+    double CalcOneWordTF (const vector<string>& words) const {
         return 1./ words.size();
     }
 };
@@ -164,8 +183,8 @@ SearchServer CreateSearchServer() {
 
 int main() {
     const SearchServer search_server = CreateSearchServer();
-
     const string query = ReadLine();
+    
     for (const auto& [document_id, relevance] : search_server.FindTopDocuments(query)) {
         cout << "{ document_id = "s << document_id << ", "
              << "relevance = "s << relevance << " }"s << endl;
