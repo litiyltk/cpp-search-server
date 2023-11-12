@@ -200,9 +200,6 @@ private:
                 throw invalid_argument("Incorrect document"s); 
             }            
         }
-        if (!all_of(words.begin(), words.end(), IsValidWord)) { 
-            throw invalid_argument("Incorrect document"s); 
-        }
         return words;
     }
 
