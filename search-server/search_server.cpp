@@ -7,6 +7,11 @@
 
 using namespace std;
 
+SearchServer::SearchServer(const string& stop_words_text)
+         : SearchServer(SplitIntoWords(stop_words_text)) {
+        
+    }
+
 void SearchServer::AddDocument(int document_id, const string& document, DocumentStatus status, const vector<int>& ratings) {
     vector<string> words = SplitIntoWordsNoStop(document);
     if (IsValidDocumentID(document_id)) {
