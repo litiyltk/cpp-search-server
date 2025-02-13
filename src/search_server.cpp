@@ -5,25 +5,20 @@
 #include <numeric>
 #include <stdexcept>
 
-using namespace std;
 
-SearchServer::SearchServer(const string& stop_words_text)
-         : SearchServer(SplitIntoWords(stop_words_text)) {
-        
-    }
+using namespace std;
 
 void SearchServer::AddDocument(int document_id, const string& document, DocumentStatus status, const vector<int>& ratings) {
     vector<string> words = SplitIntoWordsNoStop(document);
     if (IsValidDocumentID(document_id)) {
-        const double inv_word_count = 1.0 / words.size();
+        const double inv_word_count = 1.0 / static_cast<int>(words.size());
         for (const string& word : words) {
             word_to_document_freqs_[word][document_id] += inv_word_count;
         }
-        added_ids_.push_back(document_id);
-        documents_.emplace(document_id, DocumentData{ComputeAverageRating(ratings), status});
-    }
-    else {
-        throw invalid_argument("Incorrect document ID");
+            added_ids_.push_back(document_id);
+            documents_.emplace(document_id, DocumentData{ComputeAverageRating(ratings), status});
+    } else {
+        throw invalid_argument("Incorrect document ID"s);
     }
 }
     
@@ -33,7 +28,7 @@ vector<Document> SearchServer::FindTopDocuments(const string& raw_query) const {
 
 vector<Document> SearchServer::FindTopDocuments(const string& raw_query, DocumentStatus find_status) const {
     return FindTopDocuments(raw_query,
-         [find_status](int document_id, DocumentStatus status, int rating) {
+        [find_status]([[maybe_unused]] int document_id, DocumentStatus status, [[maybe_unused]] int rating) {
             return status == find_status;
         });
 }
@@ -67,7 +62,7 @@ tuple<vector<string>, DocumentStatus> SearchServer::MatchDocument(const string& 
 }
 
 int SearchServer::GetDocumentId(int index) const {
-    return added_ids_.at(index);
+    return added_ids_.at(static_cast<size_t>(index));
 }
 
 bool SearchServer::IsValidDocumentID(int document_id) {
@@ -85,8 +80,7 @@ vector<string> SearchServer::SplitIntoWordsNoStop(const string& text) const {
             if (!IsStopWord(word)) {
                 words.push_back(word);
             }
-        }
-        else {
+        } else {
             words.clear();
             throw invalid_argument("Word " + word + " is invalid"); 
         }            
@@ -130,13 +124,11 @@ SearchServer::Query SearchServer::ParseQuery(const string& text) const {
             if (!query_word.is_stop) {
                 if (query_word.is_minus) {
                     query.minus_words.insert(query_word.data);
-                }
-                else {
+                } else {
                     query.plus_words.insert(query_word.data);
                 }
             }
-        }
-        else {
+        } else {
             throw invalid_argument("Incorrect query"s);
         }
     }
@@ -144,5 +136,5 @@ SearchServer::Query SearchServer::ParseQuery(const string& text) const {
 }
 
 double SearchServer::ComputeWordInverseDocumentFreq(const string& word) const {
-    return log(GetDocumentCount() * 1.0 / word_to_document_freqs_.at(word).size());
+    return log(GetDocumentCount() * 1.0 / static_cast<int>(word_to_document_freqs_.at(word).size()));
 }

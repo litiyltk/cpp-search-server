@@ -4,13 +4,15 @@
 #include <string>
 #include <vector>
 
+
 template<typename Iterator> 
 class IteratorRange {
 public:
-    IteratorRange(Iterator begin, Iterator end, size_t page_size)
-         : begin_ (begin), end_ (end), size_of_page_ (page_size) {
-
-        }
+    explicit IteratorRange(Iterator begin, Iterator end, size_t page_size)
+        : begin_ (begin)
+        , end_ (end)
+        , size_of_page_ (page_size) {
+    }
   
     auto begin() const{
         return begin_;
