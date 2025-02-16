@@ -1,12 +1,10 @@
 #include "document.h"
 
 
-Document::Document(int doc_id, double doc_relevance, int doc_rating)
-    : id(doc_id), relevance(doc_relevance), rating(doc_rating) {
-}
+namespace document {
 
 bool Document::operator==(const Document& other) const {
-    return this->id == other.id && this->rating == other.rating && std::abs(this->relevance - other.relevance) < EPSILON;
+    return this->id == other.id && this->rating == other.rating && std::abs(this->relevance - other.relevance) <  EPSILON;
 }
 
 bool Document::operator!=(const Document& other) const {
@@ -20,3 +18,5 @@ std::ostream& operator<<(std::ostream& out, const Document& document) {
         << "rating = " << document.rating << " }";
     return out;
 }
+
+}; // namespace document

@@ -1,17 +1,27 @@
 #pragma once
 
+#include "document.h"
+#include "search_server.h"
+
 #include <deque>
 #include <string>
 #include <vector>
 
-#include "search_server.h"
 
+namespace request_queue {
+
+using namespace document;
+using namespace search_server;
 
 class RequestQueue {
 public:
     static constexpr int MINUTES_IN_DAY = 1440;
 
-    explicit RequestQueue(const SearchServer& search_server);
+    explicit RequestQueue(const SearchServer& search_server)
+        : search_server_(search_server)
+        , no_results_requests_(0)
+        , current_time_(0) {
+    }
 
     // Фильтрация по пользовательскому предикату int document_id, DocumentStatus status, int rating
     template <typename DocumentPredicate>
@@ -49,3 +59,5 @@ std::vector<Document> RequestQueue::AddFindRequest(const std::string& raw_query,
     AddRequest(result.size());
     return result;
 }
+
+}; // namespace request_queue

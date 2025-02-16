@@ -1,25 +1,14 @@
 #include "string_processing.h"
 
-using namespace std;
 
-vector<string> SplitIntoWords(const string& text) {
-    vector<string> words;
-    string word;
-    
-    for (const char c : text) {
-        if (c == ' ') {
-            if (!word.empty()) {
-                words.push_back(word);
-                word.clear();
-            }
-        } else {
-            word += c;
-        }
+namespace string_processing {
+
+std::vector<std::string> SplitIntoWords(std::string_view text) {
+    std::vector<std::string> words;
+    for (auto word : text | std::views::split(' ')) {
+        words.emplace_back(word.begin(), word.end());
     }
-
-    if (!word.empty()) {
-        words.push_back(word);
-    }
-
     return words;
 }
+
+}; // namespace string_processing

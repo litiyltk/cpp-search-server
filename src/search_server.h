@@ -2,17 +2,24 @@
 
 #include <algorithm>
 #include <cmath>
+#include <numeric>
 #include <unordered_map>
 #include <unordered_set>
 #include <stdexcept>
 #include <string>
 #include <vector>
 
-#include "read_input_functions.h"
 #include "document.h"
 #include "string_processing.h"
 
-const int MAX_RESULT_DOCUMENT_COUNT = 5; // Количество выводимых документов
+
+namespace search_server {
+
+using namespace std::string_literals;
+using namespace document;
+using namespace string_processing;
+
+constexpr int MAX_RESULT_DOCUMENT_COUNT = 5; // Количество выводимых документов
 
 class SearchServer {
 public:
@@ -88,7 +95,7 @@ template <typename StringContainer>
 SearchServer::SearchServer(const StringContainer& stop_words)
     : stop_words_(MakeUniqueNonEmptyStrings(stop_words)) {
     if (!all_of(stop_words_.begin(), stop_words_.end(), IsValidWord)) {
-        throw std::invalid_argument("Incorrect stop words");
+        throw std::invalid_argument("Incorrect stop words"s);
     }
 }
 
@@ -116,7 +123,7 @@ template <typename DocumentPredicate>
 std::vector<Document> SearchServer::FindAllDocuments(const Query& query, DocumentPredicate document_predicate) const {
     std::unordered_map<int, double> document_to_relevance;
     for (const std::string& word : query.plus_words) {
-        if (word_to_document_freqs_.count(word) == 0) {
+        if (!word_to_document_freqs_.contains(word)) {
             continue;
         }
         const double inverse_document_freq = ComputeWordInverseDocumentFreq(word);
@@ -128,12 +135,12 @@ std::vector<Document> SearchServer::FindAllDocuments(const Query& query, Documen
     }
 
     for (const std::string& word : query.minus_words) {
-        if (word_to_document_freqs_.count(word) == 0) {
+        if (!word_to_document_freqs_.contains(word)) {
             continue;
         }
-        for (const auto& [ document_id, _ ] : word_to_document_freqs_.at(word)) {
-            document_to_relevance.erase(document_id);
-        }
+        std::erase_if(document_to_relevance, [&](const auto& pair) {
+            return word_to_document_freqs_.at(word).contains(pair.first);
+        });
     }
 
     std::vector<Document> matched_documents;
@@ -143,3 +150,5 @@ std::vector<Document> SearchServer::FindAllDocuments(const Query& query, Documen
 
     return matched_documents;
 }
+
+}; // namespace search_server

@@ -5,13 +5,17 @@
 #include <vector>
 
 
+namespace paginator {
+
+using namespace std::string_literals;
+
 template<typename Iterator> 
 class IteratorRange {
 public:
-    explicit IteratorRange(Iterator begin, Iterator end, size_t page_size)
-        : begin_ (begin)
-        , end_ (end)
-        , size_of_page_ (page_size) {
+    explicit IteratorRange(Iterator begin, Iterator end)
+        : begin_(begin)
+        , end_(end)
+        , size_of_page_(distance(begin_, end_)) {
     }
   
     auto begin() const{
@@ -35,7 +39,16 @@ private:
 template <typename Iterator>
 class Paginator {
 public:
-    Paginator(Iterator begin, Iterator end, size_t page_size);
+    Paginator(Iterator begin, Iterator end, size_t page_size) {
+        for (size_t left = distance(begin, end); left > 0;) {
+            const size_t current_page_size = std::min(page_size, left);
+            const Iterator current_page_end = std::next(begin, current_page_size);
+            pages_.push_back(IteratorRange{ begin, current_page_end });
+
+            left -= current_page_size;
+            begin = current_page_end;
+        }
+    }
     
     auto begin() const {
         return pages_.begin();
@@ -66,12 +79,4 @@ std::ostream& operator<<(std::ostream& out, const IteratorRange<Iterator>& range
     return out;
 }
 
-template <typename Iterator>
-Paginator<Iterator>::Paginator(Iterator begin, Iterator end, size_t page_size) {
-    while (distance(begin, end) > 0) {  
-        auto new_end = begin;
-        std::advance(new_end, page_size);
-        pages_.push_back(IteratorRange(begin, new_end, page_size));
-        std::advance(begin, page_size);
-    }    
-}
+}; //namespace paginator

@@ -1,21 +1,15 @@
 #include "request_queue.h"
 
-using namespace std;
 
-RequestQueue::RequestQueue(const SearchServer& search_server)
-    : search_server_(search_server)
-    , no_results_requests_(0)
-    , current_time_(0) {
+namespace request_queue {
 
-}
-
-vector<Document> RequestQueue::AddFindRequest(const string& raw_query, DocumentStatus status) {
+std::vector<Document> RequestQueue::AddFindRequest(const std::string& raw_query, DocumentStatus status) {
     const auto result = search_server_.FindTopDocuments(raw_query, status);
     AddRequest(static_cast<int>(result.size()));
     return result;
 }
 
-vector<Document> RequestQueue::AddFindRequest(const string& raw_query) {
+std::vector<Document> RequestQueue::AddFindRequest(const std::string& raw_query) {
     const auto result = search_server_.FindTopDocuments(raw_query);
     AddRequest(static_cast<int>(result.size()));
     return result;
@@ -42,3 +36,5 @@ void RequestQueue::AddRequest(int results_num) {
         ++no_results_requests_;
     }
 }
+
+}; // namespace request_queue
